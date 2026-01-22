@@ -12,6 +12,7 @@ const ROUTE_PERMISSIONS = {
   "/user-settings": "manage_users",
   "/settings": "configure_settings",
   "/symptoms": "view_symptoms",
+  "/user/:id" : "view_user"
 };
 
 function AdminLayout() {

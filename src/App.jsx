@@ -9,6 +9,7 @@ import UserManagement from "./pages/UserManagement";
 import PageNotFound from "./pages/PageNotFound";
 import AdminLayout from "./components/layout/AdminLayout";
 import Settings from "./pages/Settings";
+import ViewUser from "./pages/ViewUser";
 
 
 function App(){
@@ -23,6 +24,7 @@ function App(){
         <Route path="/departments" element={<Departments />} />
         <Route path="/doctors" element={<Doctors />} />
         <Route path="/user-settings" element={<UserManagement />} />
+        <Route path="/user/:id" element={<ViewUser />} />
         <Route path="/rules" element={<MatchingRules />} />
         <Route path="/settings" element={<Settings />} />
       </Route>

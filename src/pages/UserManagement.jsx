@@ -1,22 +1,24 @@
-import { useState } from "react";
-import { toast } from "react-toastify";
+import { useEffect, useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import Header from "../components/layout/Header";
 import { Card, CardHeader } from "../components/common/Card";
 import { BiPlus } from "react-icons/bi";
 import StatusBadge from "../components/common/StatusBadge";
-import { LuPencil, LuShield, LuUserCheck } from "react-icons/lu";
+import { LuEye, LuPencil, LuShield, LuUserCheck } from "react-icons/lu";
 import { GoTrash } from "react-icons/go";
 import CustomModal from "../components/common/CustomModal";
+import { addUserAPI, editUserAPI, getAllUsersAPI, removeUserAPI } from "../services/allAPI";
+import { Link } from 'react-router-dom'
 
 const ROLE_DESCRIPTIONS = {
-  SUPER_ADMIN: {
+  admin: {
     label: "Super Admin",
     description:
       "Full system access including user management, configuration, and all operations",
     color: "bg-primary text-primary-foreground",
   },
-  REVIEW_SPECIALIST: {
+  review_specialist: {
     label: "Review Specialist",
     description:
       "Can view symptoms, run matching, approve/reject cases, and add notes",
@@ -25,7 +27,7 @@ const ROLE_DESCRIPTIONS = {
 };
 
 const PERMISSIONS_BY_ROLE = {
-  SUPER_ADMIN: [
+  admin: [
     "View Admin Dashboard",
     "Manage Departments (CRUD)",
     "Manage Doctors (CRUD)",
@@ -36,7 +38,7 @@ const PERMISSIONS_BY_ROLE = {
     "Configure Notification Settings",
     "Trigger Manual Notifications",
   ],
-  REVIEW_SPECIALIST: [
+  review_specialist: [
     "View Assigned Symptom Requests",
     "View Patient Symptom Details",
     "Trigger Rule-Based Matching",
@@ -50,26 +52,67 @@ const PERMISSIONS_BY_ROLE = {
 const initialFormData = {
   name: "",
   email: "",
-  password: "",
-  role: "REVIEW_SPECIALIST",
+  phone: "",
+  passwordHash: "",
+  role: "review_specialist",
   isActive: true,
 };
 
 function UserManagement() {
   const {
-    adminUsers,
-    addAdminUser,
-    updateAdminUser,
-    deleteAdminUser,
-    user: currentUser,
+    user
   } = useAuth();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState(initialFormData);
   const [showPermissions, setShowPermissions] = useState(null);
+  const [adminUsers, setAdminUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState({})
+
+  useEffect(() => {
+    getAllAdminUsers()
+    setCurrentUser(user)
+  }, [])
+
+  const handleResetForm = () => {
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      passwordHash: "",
+      role: "review_specialist",
+      isActive: true,
+    })
+  }
+
+  const getAllAdminUsers = async () => {
+    const token = sessionStorage.getItem("token");
+    console.log(token);
+
+    if (token) {
+      const reqHeader = {
+        "Authorization": `Bearer ${token}`
+      }
+      try {
+        const result = await getAllUsersAPI(reqHeader);
+        const allUsers = result.data;
+        console.log(allUsers);
+        const allAdmins = allUsers.filter(user => user.role == 'admin' || user.role == 'review_specialist')
+        setAdminUsers(allAdmins)
+
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    else {
+      console.log("No Token exists");
+    }
+  }
 
   const handleOpenCreate = () => {
+    console.log("handleOpenCreate");
+
     setEditingUser(null);
     setFormData(initialFormData);
     setIsModalOpen(true);
@@ -80,71 +123,101 @@ function UserManagement() {
     setFormData({
       name: user.name,
       email: user.email,
-      password: "",
+      phone: user.phone,
+      passwordHash: user.passwordHash,
       role: user.role,
       isActive: user.isActive,
     });
     setIsModalOpen(true);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name.trim() || !formData.email.trim()) {
       toast.error("Name and email are required");
       return;
     }
 
-    if (!editingUser && !formData.password.trim()) {
+    if (!editingUser && !formData.passwordHash.trim()) {
       toast.error("Password is required for new users");
       return;
     }
-
-    const duplicate = adminUsers.find(
-      (u) =>
-        u.email == formData.email &&
-        u.id != editingUser?.id
-    );
-    if (duplicate) {
-      toast.error(
-        "A user with this email already exists"
-      );
-      return;
-    }
-
-    if (editingUser) {
-      const updates = {
-        name: formData.name,
-        email: formData.email,
-        role: formData.role,
-        isActive: formData.isActive,
-      };
-      if (formData.password.trim()) {
-        updates.password = formData.password;
+    const token = sessionStorage.getItem("token");
+    if (token) {
+      const reqHeader = {
+        "Authorization": `Bearer ${token}`
       }
-      updateAdminUser(editingUser.id, updates);
-      toast.success("User updated successfully");
-    } else {
-      addAdminUser(formData);
-      toast.success("User created successfully");
+
+      if (editingUser) {
+        const updates = {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          passwordHash: formData.passwordHash,
+          role: formData.role,
+          isActive: formData.isActive,
+        };
+        if (formData.passwordHash.trim()) {
+          updates.passwordHash = formData.passwordHash;
+        }
+        try {
+          const result = await editUserAPI(editingUser._id, updates, reqHeader)
+          if (result.status == 200) {
+            toast.success("User updated successfully");
+          }
+          else {
+            toast.error("Something went wrong!")
+            console.log(result);
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      } else {
+
+        try {
+          console.log("handleOpenCreate Submit");
+          const result = await addUserAPI(formData, reqHeader);
+          if (result.status == 200) {
+            toast.success("User Added successfully");
+          }
+          else if (result.status == 409) {
+            toast.warning(result.response.data);
+          } else {
+            toast.error("Something went wrong!")
+            console.log(result);
+          }
+          //clear the form after api call response received
+          handleResetForm();
+
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    }
+    else {
+      console.log("No Token exists");
     }
 
     setIsModalOpen(false);
     setFormData(initialFormData);
+    getAllAdminUsers();
   };
 
-  const handleDelete = (userId) => {
-    if (userId == currentUser?.id) {
+  const handleDelete = async (userId) => {
+    console.log(userId);
+
+    if (userId == currentUser?._id) {
       toast.error("You cannot delete your own account");
       return;
     }
 
     const user = adminUsers.find(
-      (u) => u.id == userId
+      (u) => u._id == userId
     );
-    if (user?.role == "SUPER_ADMIN") {
+    if (user?.role == "admin") {
       const otherUsers = adminUsers.filter(
         (u) =>
-          u.role == "SUPER_ADMIN" &&
-          u.id != userId
+          u.role == "admin" &&
+          u._id != userId
       );
       if (otherUsers.length == 0) {
         toast.error(
@@ -153,18 +226,38 @@ function UserManagement() {
         return;
       }
     }
-
-    deleteAdminUser(userId);
-    toast.success("User deleted successfully");
+    // deleteAdminUser(userId);
+    const token = sessionStorage.getItem("token");
+    if (token) {
+      const reqHeader = {
+        "Authorization": `Bearer ${token}`
+      }
+      try {
+        const result = await removeUserAPI(userId, reqHeader)
+        if (result.status == 200) {
+          toast.success("User deleted successfully");
+        }
+        else {
+          toast.error("Something went wrong!")
+          console.log(result);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    else {
+      console.log("No Token exists");
+    }
+    getAllAdminUsers();
   };
 
   const toggleUserStatus = (userId) => {
     const user = adminUsers.find(
-      (u) => u.id == userId
+      (u) => u._id == userId
     );
     if (!user) return;
 
-    if (userId == currentUser?.id) {
+    if (userId == currentUser?._id) {
       toast.error(
         "You cannot deactivate your own account"
       );
@@ -175,13 +268,13 @@ function UserManagement() {
       isActive: !user.isActive,
     });
     toast.success(
-      `User ${
-        user.isActive
-          ? "deactivated"
-          : "activated"
+      `User ${user.isActive
+        ? "deactivated"
+        : "activated"
       } successfully`
     );
   };
+
 
   return (
     <div className="min-h-screen">
@@ -255,7 +348,7 @@ function UserManagement() {
         <Card>
           <CardHeader
             title="Admin Users"
-            subtitle={`${adminUsers.length} user(s) total`}
+            subtitle={`${adminUsers?.length} user(s) total`}
             action={
               <button
                 onClick={handleOpenCreate}
@@ -275,75 +368,67 @@ function UserManagement() {
                     Name
                   </th>
                   <th className="px-4 py-3 text-left text-sm text-muted-foreground">
-                    Email
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm text-muted-foreground">
-                    Role
+                    Contact
                   </th>
                   <th className="px-4 py-3 text-left text-sm text-muted-foreground">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-sm text-muted-foreground">
-                    Created
-                  </th>
                   <th className="px-4 py-3 text-right text-sm text-muted-foreground">
                     Actions
+                  </th>
+                  <th className="px-4 py-3 text-right text-sm text-muted-foreground">
+
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {adminUsers.map((u) => (
+                {adminUsers?.map((u, index) => (
                   <tr
-                    key={u.id}
+                    key={index}
                     className="border-b border-border hover:bg-muted/50"
                   >
                     <td className="px-4 py-3">
-                      <span className="font-medium">
-                        {u.name}
-                        {u.id === currentUser?.id && (
+                      <p className="font-medium">
+                        {u?.name}
+                        {u?.name === user?.name && (
                           <span className="ml-2 text-xs text-muted-foreground">
                             (You)
                           </span>
                         )}
-                      </span>
+                      </p>
+                      <p
+                        className={`rounded-full px-2.5 py-1 inline-block text-xs font-medium ${ROLE_DESCRIPTIONS[u?.role]?.color}`}>
+                        {ROLE_DESCRIPTIONS[u?.role]?.label}
+                      </p>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {u.email}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${ROLE_DESCRIPTIONS[u.role].color}`}
-                      >
-                        {ROLE_DESCRIPTIONS[u.role].label}
-                      </span>
+                      <div className="flex flex-col" style={{ fontSize: '12px' }}>
+                        <p>{u?.email}</p>
+                        <p>{u?.phone}</p>
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() =>
-                          toggleUserStatus(u.id)
+                          toggleUserStatus(u._id)
                         }
                         disabled={
-                          u.id == currentUser?.id
+                          u?._id == user?._id
                         }
                       >
                         <StatusBadge
                           status={
-                            u.isActive
+                            u?.isActive
                               ? "active"
                               : "inactive"
                           }
                           label={
-                            u.isActive
+                            u?.isActive
                               ? "Active"
                               : "Inactive"
                           }
                         />
                       </button>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {new Date(
-                        u.createdAt
-                      ).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
@@ -351,22 +436,26 @@ function UserManagement() {
                           onClick={() =>
                             handleOpenEdit(u)
                           }
-                          className="rounded-lg p-2 hover:bg-muted cursor-pointer"
+                          className="transition-all duration-300 rounded-lg p-2 text-blue-800 bg-blue-50 hover:bg-blue-200 cursor-pointer"
                         >
                           <LuPencil className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() =>
-                            handleDelete(u.id)
+                            handleDelete(u._id)
                           }
                           disabled={
-                            u.id == currentUser?.id
+                            u?._id == user?._id
                           }
-                          className={`rounded-lg p-2 hover:bg-muted disabled:opacity-50 ${u.id == currentUser?.id ? '' : 'cursor-pointer'}`}
-                        >
+                          className={`transition-all duration-300 rounded-lg p-2 text-red-800 bg-red-50 hover:bg-red-200 disabled:opacity-50 ${u?._id == user?._id ? '' : 'cursor-pointer'}`}>
                           <GoTrash className="h-4 w-4" />
                         </button>
                       </div>
+                    </td>
+                    <td className="px-2 py-3 text-foreground text-right">
+                      <Link title="View More Details" to={`/user/${u?._id}`} className="rounded-lg p-2 bg-status-approved/10 text-emerald-700 hover:bg-status-approved/25 cursor-pointer transition-all duration-300 inline-flex justify-center items-center">
+                        <LuEye />
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -428,15 +517,39 @@ function UserManagement() {
             className="w-full rounded-lg border px-3 py-2"
           />
           <input
-            type="password"
-            value={formData.password}
+            type="text"
+            value={formData.phone}
             onChange={(e) =>
               setFormData((p) => ({
                 ...p,
-                password: e.target.value,
+                phone: e.target.value,
+              }))
+            }
+            placeholder="Phone"
+            className="w-full rounded-lg border px-3 py-2"
+          />
+          <input
+            type="text"
+            value={formData.passwordHash}
+            onChange={(e) =>
+              setFormData((p) => ({
+                ...p,
+                passwordHash: e.target.value,
               }))
             }
             placeholder="Password"
+            className="w-full rounded-lg border px-3 py-2"
+          />
+          <input
+            type="text"
+            value={formData.isActive}
+            onChange={(e) =>
+              setFormData((p) => ({
+                ...p,
+                isActive: e.target.value,
+              }))
+            }
+            placeholder="Is Active"
             className="w-full rounded-lg border px-3 py-2"
           />
           <select
@@ -449,15 +562,17 @@ function UserManagement() {
             }
             className="w-full rounded-lg border px-3 py-2"
           >
-            <option value="SUPER_ADMIN">
+            <option value="admin">
               Super Admin
             </option>
-            <option value="REVIEW_SPECIALIST">
+            <option value="review_specialist">
               Review Specialist
             </option>
           </select>
         </div>
       </CustomModal>
+
+      <ToastContainer position="top-center" autoClose={3000} theme='colored' />
     </div>
   );
 }

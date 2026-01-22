@@ -76,7 +76,7 @@ function Sidebar() {
           </div>
           <button
             onClick={logout}
-            className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+            className="cursor-pointer rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
             title="Logout"
           >
             <LuLogOut className="h-5 w-5" />
