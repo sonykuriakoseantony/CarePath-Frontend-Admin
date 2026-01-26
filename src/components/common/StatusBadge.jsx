@@ -5,10 +5,10 @@ const badgeVariants = cva(
   {
     variants: {
       status: {
-        SUBMITTED: "bg-status-submitted/15 text-amber-700",
-        AUTO_SUGGESTED: "bg-status-suggested/15 text-blue-700",
-        APPROVED: "bg-status-approved/15 text-emerald-700",
-        REJECTED: "bg-status-rejected/15 text-red-700",
+        submitted: "bg-status-submitted/15 text-amber-700",
+        auto_suggested: "bg-status-suggested/15 text-blue-700",
+        approved: "bg-status-approved/15 text-emerald-700",
+        rejected: "bg-status-rejected/15 text-red-700",
         active: "bg-status-approved/15 text-emerald-700",
         inactive: "bg-muted text-muted-foreground",
         available: "bg-status-approved/15 text-emerald-700",
@@ -16,7 +16,7 @@ const badgeVariants = cva(
       },
     },
     defaultVariants: {
-      status: "SUBMITTED",
+      status: "submitted",
     },
   }
 );

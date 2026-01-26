@@ -13,7 +13,7 @@ function Dashboard() {
   const { symptoms, departments, doctors } = useData();
   const navigate = useNavigate();
 
-  console.log(symptoms, departments, doctors);
+  // console.log(symptoms, departments, doctors);
   
 
   const submittedCount = symptoms.filter(
@@ -43,7 +43,7 @@ function Dashboard() {
 
   const getDepartmentName = (id) => {
     return (
-      departments.find((d) => d.id == id)?.name ||
+      departments.find((d) => d._id == id)?.name ||
       "Pending"
     );
   };
@@ -159,7 +159,7 @@ function Dashboard() {
               <div className="space-y-2">
                 {departments.slice(0, 4).map((dept) => (
                   <div
-                    key={dept.id}
+                    key={dept._id}
                     className="flex items-center justify-between py-2"
                   >
                     <div className="flex items-center gap-2">

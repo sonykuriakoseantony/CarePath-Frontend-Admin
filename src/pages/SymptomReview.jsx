@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { useData } from "../context/DataContext";
 import Header from "../components/layout/Header";
 import { Card } from "../components/common/Card";
@@ -18,25 +18,27 @@ function SymptomReview() {
     rejectSymptom,
   } = useData();
 
-  const [filter, setFilter] = useState("ALL");
+  const [filter, setFilter] = useState("all");
   const [selectedSymptom, setSelectedSymptom] = useState(null);
   const [notes, setNotes] = useState("");
 
   const filteredSymptoms =
-    filter === "ALL"
+    filter == "all"
       ? symptoms
-      : symptoms.filter((s) => s.status === filter);
+      : symptoms.filter((s) => s.status == filter);
 
   const getDepartmentName = (id) =>
-    departments.find((d) => d.id === id)?.name ||
+    departments.find((d) => d._id == id)?.name ||
     "N/A";
 
   const getDoctorName = (id) =>
-    doctors.find((d) => d.id === id)?.name ||
+    doctors.find((d) => d._id == id)?.name ||
     "N/A";
 
-  const handleRunMatching = (symptomId) => {
-    runMatching(symptomId);
+  const handleRunMatching = async (symptomId) => {
+    await runMatching(symptomId);
+    console.log(symptoms);
+    
     toast.success(
       "Matching algorithm executed successfully"
     );
@@ -45,7 +47,7 @@ function SymptomReview() {
   const handleApprove = () => {
     if (!selectedSymptom) return;
 
-    approveSymptom(selectedSymptom.id, notes);
+    approveSymptom(selectedSymptom._id, notes);
     toast.success(
       `Patient ${selectedSymptom.patientName} notified via email`
     );
@@ -56,24 +58,24 @@ function SymptomReview() {
   const handleReject = () => {
     if (!selectedSymptom) return;
 
-    rejectSymptom(selectedSymptom.id, notes);
+    rejectSymptom(selectedSymptom._id, notes);
     toast.info("Submission rejected");
     setSelectedSymptom(null);
     setNotes("");
   };
 
   const statusCounts = {
-    SUBMITTED: symptoms.filter(
-      (s) => s.status === "SUBMITTED"
+    submitted: symptoms.filter(
+      (s) => s.status == "submitted"
     ).length,
-    AUTO_SUGGESTED: symptoms.filter(
-      (s) => s.status === "AUTO_SUGGESTED"
+    auto_suggested: symptoms.filter(
+      (s) => s.status == "auto_suggested"
     ).length,
-    APPROVED: symptoms.filter(
-      (s) => s.status === "APPROVED"
+    approved: symptoms.filter(
+      (s) => s.status == "approved"
     ).length,
-    REJECTED: symptoms.filter(
-      (s) => s.status === "REJECTED"
+    rejected: symptoms.filter(
+      (s) => s.status == "rejected"
     ).length,
   };
 
@@ -88,25 +90,25 @@ function SymptomReview() {
         {/* Filter Tabs */}
         <div className="flex flex-wrap gap-2">
           {[
-            "ALL",
-            "SUBMITTED",
-            "AUTO_SUGGESTED",
-            "APPROVED",
-            "REJECTED",
+            "all",
+            "submitted",
+            "auto_suggested",
+            "approved",
+            "rejected",
           ].map((status) => (
             <button
               key={status}
               onClick={() => setFilter(status)}
               className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                filter === status
+                filter == status
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
             >
-              {status === "ALL"
-                ? "All"
+              {status == "all"
+                ? "all"
                 : status.replace("_", " ")}
-              {status !== "ALL" && (
+              {status !== "all" && (
                 <span className="ml-2 rounded-full bg-background/20 px-1.5 py-0.5 text-xs">
                   {statusCounts[status]}
                 </span>
@@ -130,9 +132,9 @@ function SymptomReview() {
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Severity
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {/* <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Status
-                  </th>
+                  </th> */}
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Suggested
                   </th>
@@ -146,18 +148,16 @@ function SymptomReview() {
               </thead>
 
               <tbody className="divide-y divide-border">
-                {filteredSymptoms.map((symptom) => (
+                {filteredSymptoms?.map((symptom) => (
                   <tr
-                    key={symptom.id}
+                    key={symptom._id}
                     className="transition-colors hover:bg-muted/20"
                   >
                     <td className="px-6 py-4">
                       <p className="font-medium text-foreground">
                         {symptom.patientName}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {symptom.patientEmail}
-                      </p>
+                      <StatusBadge status={symptom.status} />
                     </td>
 
                     <td className="px-6 py-4">
@@ -172,9 +172,9 @@ function SymptomReview() {
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                          symptom.severity === "severe"
+                          symptom.severity == "severe"
                             ? "bg-red-100 text-red-700"
-                            : symptom.severity ===
+                            : symptom.severity ==
                               "moderate"
                             ? "bg-amber-100 text-amber-700"
                             : "bg-emerald-100 text-emerald-700"
@@ -184,9 +184,9 @@ function SymptomReview() {
                       </span>
                     </td>
 
-                    <td className="px-6 py-4">
+                    {/* <td className="px-6 py-4">
                       <StatusBadge status={symptom.status} />
-                    </td>
+                    </td> */}
 
                     <td className="px-6 py-4">
                       {symptom.suggestedDepartmentId ? (
@@ -241,23 +241,19 @@ function SymptomReview() {
 
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        {symptom.status ===
-                          "SUBMITTED" && (
+                        {symptom.status ==
+                          "submitted" && (
                           <button
-                            onClick={() =>
-                              handleRunMatching(
-                                symptom.id
-                              )
-                            }
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:opacity-90"
+                            onClick={() => handleRunMatching(symptom._id)}
+                            className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:opacity-90"
                           >
                             <LuPlay className="h-3.5 w-3.5" />
-                            Run Matching
+                            Run
                           </button>
                         )}
 
                         {symptom.status ===
-                          "AUTO_SUGGESTED" && (
+                          "auto_suggested" && (
                           <>
                             <button
                               onClick={() => {
@@ -286,9 +282,9 @@ function SymptomReview() {
                         )}
 
                         {(symptom.status ===
-                          "APPROVED" ||
+                          "approved" ||
                           symptom.status ===
-                            "REJECTED") && (
+                            "rejected") && (
                           <button
                             onClick={() =>
                               setSelectedSymptom(
@@ -309,7 +305,7 @@ function SymptomReview() {
             </table>
           </div>
 
-          {filteredSymptoms.length === 0 && (
+          {filteredSymptoms.length == 0 && (
             <div className="p-12 text-center">
               <p className="text-muted-foreground">
                 No submissions found
@@ -325,13 +321,13 @@ function SymptomReview() {
         onClose={() => setSelectedSymptom(null)}
         title={
           selectedSymptom?.status ===
-          "AUTO_SUGGESTED"
+          "auto_suggested"
             ? "Approve Submission"
             : "Submission Details"
         }
         footer={
           selectedSymptom?.status ===
-          "AUTO_SUGGESTED" && (
+          "auto_suggested" && (
             <>
               <button
                 onClick={handleApprove}
@@ -413,7 +409,7 @@ function SymptomReview() {
             </div>
 
             {selectedSymptom.status ===
-              "AUTO_SUGGESTED" && (
+              "auto_suggested" && (
               <div>
                 <label className="mb-2 flex items-center gap-2 text-sm font-medium">
                   <LuMessageSquare className="h-4 w-4" />
@@ -443,6 +439,8 @@ function SymptomReview() {
           </div>
         )}
       </CustomModal>
+
+      <ToastContainer position="top-center" autoClose={3000} theme="colored" />
     </div>
   );
 }

@@ -3,7 +3,24 @@ import React, {
   useContext,
   useState,
   useCallback,
+  useEffect,
 } from "react";
+import {
+  addDepartmentAPI,
+  addDoctorAPI,
+  addRuleAPI,
+  editDepartmentAPI,
+  editDoctorAPI,
+  editRuleAPI,
+  getAllDepartmentsAPI,
+  getAllDoctorsAPI,
+  getAllRulesAPI,
+  getAllSymptomsAPI,
+  removeDepartmentAPI,
+  removeDoctorAPI,
+  removeRuleAPI,
+} from "../services/allAPI";
+import { getAuthHeader } from "../utils/authHeader";
 
 const DataContext = createContext(undefined);
 
@@ -44,7 +61,7 @@ const initialDepartments = [
 
 const initialDoctors = [
   {
-    id: "1",
+    _id: "1",
     name: "Emily Chen",
     email: "emily@medcare.com",
     departmentId: "1",
@@ -52,7 +69,7 @@ const initialDoctors = [
     isAvailable: true,
   },
   {
-    id: "2",
+    _id: "2",
     name: "Michael Ross",
     email: "michael@medcare.com",
     departmentId: "2",
@@ -60,7 +77,7 @@ const initialDoctors = [
     isAvailable: true,
   },
   {
-    id: "3",
+    _id: "3",
     name: "Lisa Park",
     email: "lisa@medcare.com",
     departmentId: "3",
@@ -68,7 +85,7 @@ const initialDoctors = [
     isAvailable: true,
   },
   {
-    id: "4",
+    _id: "4",
     name: "James Wright",
     email: "james@medcare.com",
     departmentId: "4",
@@ -76,7 +93,7 @@ const initialDoctors = [
     isAvailable: false,
   },
   {
-    id: "5",
+    _id: "5",
     name: "Anna Miller",
     email: "anna@medcare.com",
     departmentId: "5",
@@ -133,8 +150,7 @@ const initialSymptoms = [
     id: "1",
     patientName: "John Smith",
     patientEmail: "john@email.com",
-    symptoms:
-      "Experiencing chest pain and shortness of breath for 2 days",
+    symptoms: "Experiencing chest pain and shortness of breath for 2 days",
     severity: "severe",
     duration: "2 days",
     status: "SUBMITTED",
@@ -183,135 +199,281 @@ const initialSymptoms = [
 /* -------------------- Provider -------------------- */
 
 export function DataProvider({ children }) {
-  const [departments, setDepartments] = useState(initialDepartments);
-  const [doctors, setDoctors] = useState(initialDoctors);
-  const [matchingRules, setMatchingRules] = useState(initialRules);
-  const [symptoms, setSymptoms] = useState(initialSymptoms);
+  const [departments, setDepartments] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+  const [matchingRules, setMatchingRules] = useState([]);
+  const [symptoms, setSymptoms] = useState([]);
+  const [loadingData, setLoadingData] = useState(false);
 
-  const generateId = () =>
-    Math.random().toString(36).substr(2, 9);
+  console.log(symptoms);
+
+  const generateId = () => Math.random().toString(36).substring(2, 9);
+
+  useEffect(() => {
+    fetchDepartments();
+    fetchAllDoctors();
+    fetchAllRules();
+    fetchSymptomsRequests();
+  }, []);
 
   /* ---------- Department CRUD ---------- */
+  const fetchDepartments = async () => {
+    try {
+      console.log("Fetching dpts");
 
-  const addDepartment = useCallback((dept) => {
-    setDepartments((prev) => [
-      ...prev,
-      { ...dept, id: generateId() },
-    ]);
+      setLoadingData(true);
+      const headers = getAuthHeader();
+      const res = await getAllDepartmentsAPI(headers);
+      const depts = res.data;
+      setDepartments(depts);
+    } catch (error) {
+      console.log("Failed to fetch departments", error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  const addDepartment = async (dept) => {
+    const headers = getAuthHeader();
+    try {
+      const res = await addDepartmentAPI(dept, headers);
+      if (res?.status == 200) {
+        fetchDepartments();
+      } else {
+        console.log("Error adding Department.", res);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const updateDepartment = useCallback(async (id, dept) => {
+    const headers = getAuthHeader();
+    try {
+      const res = await editDepartmentAPI(id, dept, headers);
+      if (res?.status == 200) {
+        fetchDepartments();
+      } else {
+        console.log("Error adding Department.", res);
+      }
+    } catch (err) {
+      console.log(err);
+    }
   }, []);
 
-  const updateDepartment = useCallback((id, dept) => {
-    setDepartments((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, ...dept } : d))
-    );
+  const deleteDepartment = useCallback(async (id) => {
+    const headers = getAuthHeader();
+    try {
+      const res = await removeDepartmentAPI(id, headers);
+      if (res?.status == 200) {
+        fetchDepartments();
+      } else {
+        console.log("Error deleting Department.", res);
+      }
+    } catch (err) {
+      console.log(err);
+    }
   }, []);
 
-  const deleteDepartment = useCallback((id) => {
-    setDepartments((prev) => prev.filter((d) => d.id !== id));
+  /* ---------- Doctors CRUD ---------- */
+  const fetchAllDoctors = async () => {
+    try {
+      console.log("Fetching dpts");
+
+      setLoadingData(true);
+      const headers = getAuthHeader();
+      const res = await getAllDoctorsAPI(headers);
+      setDoctors(res.data);
+    } catch (error) {
+      console.log("Failed to fetch departments", error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  const addDoctor = async (doctor) => {
+    const headers = getAuthHeader();
+    try {
+      const res = await addDoctorAPI(doctor, headers);
+      if (res?.status == 200) {
+        fetchAllDoctors();
+        return true;
+      } else {
+        console.log("Error adding Doctors.", res);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const updateDoctor = useCallback(async (id, doctor) => {
+    const headers = getAuthHeader();
+    try {
+      const res = await editDoctorAPI(id, doctor, headers);
+      if (res?.status == 200) {
+        fetchAllDoctors();
+      } else {
+        console.log("Error adding Department.", res);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+    // setDoctors((prev) =>
+    //   prev.map((d) => (d.id === id ? { ...d, ...doctor } : d)),
+    // );
   }, []);
 
-  /* ---------- Doctor CRUD ---------- */
-
-  const addDoctor = useCallback((doctor) => {
-    setDoctors((prev) => [
-      ...prev,
-      { ...doctor, id: generateId() },
-    ]);
-  }, []);
-
-  const updateDoctor = useCallback((id, doctor) => {
-    setDoctors((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, ...doctor } : d))
-    );
-  }, []);
-
-  const deleteDoctor = useCallback((id) => {
-    setDoctors((prev) => prev.filter((d) => d.id !== id));
+  const deleteDoctor = useCallback(async (id) => {
+    const headers = getAuthHeader();
+    try {
+      const res = await removeDoctorAPI(id, headers);
+      if (res?.status == 200) {
+        fetchAllDoctors();
+      } else {
+        console.log("Error deleting Doctor.", res);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+    // setDoctors((prev) => prev.filter((d) => d.id !== id));
   }, []);
 
   /* ---------- Matching Rule CRUD ---------- */
+  const fetchAllRules = async () => {
+    try {
+      console.log("Fetching Rules");
 
-  const addMatchingRule = useCallback((rule) => {
-    setMatchingRules((prev) => [
-      ...prev,
-      { ...rule, id: generateId() },
-    ]);
+      setLoadingData(true);
+      const headers = getAuthHeader();
+      const res = await getAllRulesAPI(headers);
+      setMatchingRules(res.data);
+    } catch (error) {
+      console.log("Failed to fetch Rules", error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  const addMatchingRule = useCallback(async (rule) => {
+    const headers = getAuthHeader();
+    try {
+      const res = await addRuleAPI(rule, headers);
+      if (res?.status == 200) {
+        fetchAllRules();
+        return true;
+      } else {
+        console.log("Error adding Symptom Matching Rule.", res);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+    // setMatchingRules((prev) => [...prev, { ...rule, id: generateId() }]);
   }, []);
 
-  const updateMatchingRule = useCallback((id, rule) => {
-    setMatchingRules((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, ...rule } : r))
-    );
+  const updateMatchingRule = useCallback(async (id, rule) => {
+    const headers = getAuthHeader();
+    try {
+      const res = await editRuleAPI(id, rule, headers);
+      if (res?.status == 200) {
+        fetchAllRules();
+      } else {
+        console.log("Error adding Symptom Matching Rule.", res);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+    // setMatchingRules((prev) =>
+    //   prev.map((r) => (r.id === id ? { ...r, ...rule } : r)),
+    // );
   }, []);
 
-  const deleteMatchingRule = useCallback((id) => {
-    setMatchingRules((prev) => prev.filter((r) => r.id !== id));
+  const deleteMatchingRule = useCallback(async (id) => {
+    const headers = getAuthHeader();
+    try {
+      const res = await removeRuleAPI(id, headers);
+      if (res?.status == 200) {
+        fetchAllRules();
+      } else {
+        console.log("Error deleting Symptom Matching Rule.", res);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+    // setMatchingRules((prev) => prev.filter((r) => r.id !== id));
   }, []);
+
+  /* ---------- Symptoms request fetch ---------- */
+  const fetchSymptomsRequests = async () => {
+    try {
+      console.log("Fetching Symptoms");
+
+      setLoadingData(true);
+      const headers = getAuthHeader();
+      const res = await getAllSymptomsAPI(headers);
+      setSymptoms(res.data);
+    } catch (error) {
+      console.log("Failed to fetch Symptoms", error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
 
   /* ---------- Matching Logic ---------- */
-
   const runMatching = useCallback(
-    (symptomId) => {
-      setSymptoms((prev) =>
-        prev.map((symptom) => {
+    async (symptomId) => {
+      const symptom = symptoms.find((s) => s._id === symptomId);
+      if (!symptom || symptom.status !== "submitted") return;
+
+      const symptomText = symptom.symptoms.toLowerCase();
+      let bestMatch = null;
+
+      for (const rule of matchingRules) {
+        const matchCount = rule.symptomKeywords.filter((k) =>
+          symptomText.includes(k.toLowerCase()),
+        ).length;
+
+        if (matchCount > 0) {
+          const confidence =
+            (matchCount / rule.symptomKeywords.length) * rule.confidenceWeight;
+
           if (
-            symptom.id !== symptomId ||
-            symptom.status !== "SUBMITTED"
-          )
-            return symptom;
-
-          const symptomText = symptom.symptoms.toLowerCase();
-          let bestMatch = null;
-
-          for (const rule of matchingRules) {
-            const matchCount = rule.symptomKeywords.filter((k) =>
-              symptomText.includes(k.toLowerCase())
-            ).length;
-
-            if (matchCount > 0) {
-              const confidence =
-                (matchCount / rule.symptomKeywords.length) *
-                rule.confidenceWeight;
-
-              if (!bestMatch || confidence > bestMatch.confidence) {
-                bestMatch = {
-                  departmentId: rule.departmentId,
-                  confidence,
-                };
-              }
-            }
-          }
-
-          if (bestMatch) {
-            const availableDoctors = doctors.filter(
-              (d) =>
-                d.departmentId === bestMatch.departmentId &&
-                d.isAvailable
-            );
-
-            return {
-              ...symptom,
-              status: "AUTO_SUGGESTED",
-              suggestedDepartmentId: bestMatch.departmentId,
-              suggestedDoctorId: availableDoctors[0]?.id,
-              confidenceScore:
-                Math.round(bestMatch.confidence * 100) / 100,
+            !bestMatch ||
+            confidence > bestMatch.confidence ||
+            (confidence === bestMatch.confidence &&
+              rule.priority < bestMatch.priority)
+          ) {
+            bestMatch = {
+              departmentId: rule.departmentId,
+              confidence,
+              priority: rule.priority,
             };
           }
+        }
+      }
 
-          return {
-            ...symptom,
-            status: "AUTO_SUGGESTED",
-            suggestedDepartmentId: "1",
-            suggestedDoctorId: doctors.find(
-              (d) => d.departmentId === "1" && d.isAvailable
-            )?.id,
-            confidenceScore: 0.5,
-          };
-        })
+      if (!bestMatch) return;
+
+      const availableDoctors = doctors.filter(
+        (d) => d.departmentId === bestMatch.departmentId && d.isAvailable,
+      );
+
+      const updatePayload = {
+        status: "auto_suggested",
+        suggestedDepartmentId: bestMatch.departmentId,
+        suggestedDoctorId: availableDoctors[0]?._id || "",
+        confidenceScore: Math.round(bestMatch.confidence * 100) / 100,
+      };
+
+      // 1️⃣ Save to DB
+      const headers = getAuthHeader();
+      await updateSymptomAPI(symptomId, updatePayload, headers);
+
+      // 2️⃣ Update local state (instant UI update)
+      setSymptoms((prev) =>
+        prev.map((s) => (s._id === symptomId ? { ...s, ...updatePayload } : s)),
       );
     },
-    [matchingRules, doctors]
+    [symptoms, matchingRules, doctors],
   );
 
   const approveSymptom = useCallback((id, notes) => {
@@ -320,22 +482,20 @@ export function DataProvider({ children }) {
         s.id === id
           ? {
               ...s,
-              status: "APPROVED",
+              status: "approved",
               adminNotes: notes,
               approvedAt: new Date(),
             }
-          : s
-      )
+          : s,
+      ),
     );
   }, []);
 
   const rejectSymptom = useCallback((id, notes) => {
     setSymptoms((prev) =>
       prev.map((s) =>
-        s.id === id
-          ? { ...s, status: "REJECTED", adminNotes: notes }
-          : s
-      )
+        s.id == id ? { ...s, status: "rejected", adminNotes: notes } : s,
+      ),
     );
   }, []);
 
@@ -346,6 +506,7 @@ export function DataProvider({ children }) {
         doctors,
         matchingRules,
         symptoms,
+        loadingData,
         addDepartment,
         updateDepartment,
         deleteDepartment,

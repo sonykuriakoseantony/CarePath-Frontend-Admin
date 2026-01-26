@@ -88,7 +88,6 @@ function UserManagement() {
 
   const getAllAdminUsers = async () => {
     const token = sessionStorage.getItem("token");
-    console.log(token);
 
     if (token) {
       const reqHeader = {
@@ -97,7 +96,6 @@ function UserManagement() {
       try {
         const result = await getAllUsersAPI(reqHeader);
         const allUsers = result.data;
-        console.log(allUsers);
         const allAdmins = allUsers.filter(user => user.role == 'admin' || user.role == 'review_specialist')
         setAdminUsers(allAdmins)
 

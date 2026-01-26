@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { useData } from "../context/DataContext";
 import Header from "../components/layout/Header";
 import { Card } from "../components/common/Card";
 import StatusBadge from "../components/common/StatusBadge";
 import CustomModal from "../components/common/CustomModal";
 import { LuMail, LuPencil } from "react-icons/lu";
-import { BiPlus, BiTrashAlt } from "react-icons/bi";
+import { BiPlus } from "react-icons/bi";
 import { GoTrash } from "react-icons/go";
+import { FaUserDoctor } from "react-icons/fa6";
 
 function Doctors() {
   const {
@@ -16,6 +17,7 @@ function Doctors() {
     addDoctor,
     updateDoctor,
     deleteDoctor,
+    loadingData,
   } = useData();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,21 +25,27 @@ function Doctors() {
 
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
     departmentId: "",
+    email: "",
+    phone : "",
     specialization: "",
     isAvailable: true,
   });
 
+  // if (loadingData) {
+  //   return <p className="p-6">Loading Doctor...</p>;
+  // }
+
   const getDepartmentName = (id) =>
-    departments.find((d) => d.id === id)?.name || "Unknown";
+    departments.find((d) => d._id == id)?.name || "Unknown";
 
   const openCreate = () => {
     setEditingDoctor(null);
     setFormData({
       name: "",
+      departmentId: departments[0]?._id || "",
       email: "",
-      departmentId: departments[0]?.id || "",
+      phone : "",
       specialization: "",
       isAvailable: true,
     });
@@ -48,15 +56,16 @@ function Doctors() {
     setEditingDoctor(doctor);
     setFormData({
       name: doctor.name,
-      email: doctor.email,
       departmentId: doctor.departmentId,
+      email: doctor.email,
+      phone : doctor.phone,
       specialization: doctor.specialization,
       isAvailable: doctor.isAvailable,
     });
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.name.trim() || !formData.email.trim()) {
@@ -65,22 +74,21 @@ function Doctors() {
     }
 
     if (editingDoctor) {
-      updateDoctor(editingDoctor.id, formData);
+      updateDoctor(editingDoctor._id, formData);
       toast.success("Doctor updated successfully");
     } else {
-      addDoctor(formData);
-      toast.success("Doctor added successfully");
+      const success = await addDoctor(formData);
+      if(success){
+        console.log("Doctor added successfully", success);
+        toast.success("Doctor added successfully");
+      }
+      
     }
-
     setIsModalOpen(false);
   };
 
   const handleDelete = (id) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this doctor?"
-      )
-    ) {
+    if (window.confirm("Are you sure you want to delete this doctor?")) {
       deleteDoctor(id);
       toast.success("Doctor removed");
     }
@@ -132,7 +140,7 @@ function Doctors() {
               <tbody className="divide-y divide-border">
                 {doctors.map((doctor) => (
                   <tr
-                    key={doctor.id}
+                    key={doctor._id}
                     className="transition-colors hover:bg-muted/20"
                   >
                     <td className="px-6 py-4">
@@ -157,9 +165,7 @@ function Doctors() {
 
                     <td className="px-6 py-4">
                       <p className="text-sm text-foreground">
-                        {getDepartmentName(
-                          doctor.departmentId
-                        )}
+                        {getDepartmentName(doctor.departmentId)}
                       </p>
                     </td>
 
@@ -172,33 +178,23 @@ function Doctors() {
                     <td className="px-6 py-4">
                       <StatusBadge
                         status={
-                          doctor.isAvailable
-                            ? "available"
-                            : "unavailable"
+                          doctor.isAvailable ? "available" : "unavailable"
                         }
-                        label={
-                          doctor.isAvailable
-                            ? "Available"
-                            : "Unavailable"
-                        }
+                        label={doctor.isAvailable ? "Available" : "Unavailable"}
                       />
                     </td>
 
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
                         <button
-                          onClick={() =>
-                            openEdit(doctor)
-                          }
-                          className="rounded-lg p-2 text-primary transition-colors hover:bg-primary/10"
+                          onClick={() => openEdit(doctor)}
+                          className="cursor-pointer rounded-lg p-2 text-primary transition-colors hover:bg-primary/10"
                         >
                           <LuPencil className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() =>
-                            handleDelete(doctor.id)
-                          }
-                          className="rounded-lg p-2 text-destructive transition-colors hover:bg-destructive/10"
+                          onClick={() => handleDelete(doctor._id)}
+                          className="cursor-pointer rounded-lg p-2 text-destructive transition-colors hover:bg-destructive/10"
                         >
                           <GoTrash className="h-4 w-4" />
                         </button>
@@ -210,11 +206,19 @@ function Doctors() {
             </table>
           </div>
 
-          {doctors.length === 0 && (
-            <div className="p-12 text-center">
+          {doctors.length == 0 && (
+            <div className="p-12 text-center flex flex-col items-center justify-center">
               <p className="text-muted-foreground">
                 No doctors found. Add your first doctor.
               </p>
+              <FaUserDoctor className="text-muted-foreground text-4xl mt-3" />
+              <button
+                onClick={openCreate}
+                className="mt-3 cursor-pointer inline-flex items-center gap-2 rounded-lg [background:var(--gradient-primary)] px-4 py-2.5 font-medium text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                <BiPlus className="h-5 w-5" />
+                Add Doctor
+              </button>
             </div>
           )}
         </Card>
@@ -243,15 +247,9 @@ function Doctors() {
           </>
         }
       >
-        <form
-          id="doctor-form"
-          onSubmit={handleSubmit}
-          className="space-y-4"
-        >
+        <form id="doctor-form" onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-2 block text-sm font-medium">
-              Full Name
-            </label>
+            <label className="mb-2 block text-sm font-medium">Full Name</label>
             <input
               type="text"
               value={formData.name}
@@ -267,9 +265,7 @@ function Doctors() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium">
-              Email
-            </label>
+            <label className="mb-2 block text-sm font-medium">Email</label>
             <input
               type="email"
               value={formData.email}
@@ -285,9 +281,23 @@ function Doctors() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium">
-              Department
-            </label>
+            <label className="mb-2 block text-sm font-medium">Phone</label>
+            <input
+              type="text"
+              value={formData.phone}
+              onChange={(e) =>
+                setFormData((p) => ({
+                  ...p,
+                  phone: e.target.value,
+                }))
+              }
+              className="h-10 w-full rounded-lg border border-input px-3"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium">Department</label>
             <select
               value={formData.departmentId}
               onChange={(e) =>
@@ -299,11 +309,8 @@ function Doctors() {
               className="h-10 w-full rounded-lg border border-input px-3"
               required
             >
-              {departments.map((dept) => (
-                <option
-                  key={dept.id}
-                  value={dept.id}
-                >
+              {departments?.map((dept) => (
+                <option key={dept._id} value={dept._id}>
                   {dept.name}
                 </option>
               ))}
@@ -344,9 +351,9 @@ function Doctors() {
           </div>
         </form>
       </CustomModal>
+      <ToastContainer position="top-center" autoClose={3000} theme="colored" />
     </div>
   );
 }
 
-
-export default Doctors
+export default Doctors;

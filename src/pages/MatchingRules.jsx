@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import Header from "../components/layout/Header";
 import { useData } from "../context/DataContext";
 import { Card } from "../components/common/Card";
@@ -28,13 +28,13 @@ function MatchingRules() {
   });
 
   const getDepartmentName = (id) =>
-    departments.find((d) => d.id === id)?.name || "Unknown";
+    departments.find((d) => d._id == id)?.name || "Unknown";
 
   const openCreate = () => {
     setEditingRule(null);
     setFormData({
       symptomKeywords: "",
-      departmentId: departments[0]?.id || "",
+      departmentId: departments[0]?._id || "",
       priority: 1,
       confidenceWeight: 0.8,
     });
@@ -73,7 +73,7 @@ function MatchingRules() {
     };
 
     if (editingRule) {
-      updateMatchingRule(editingRule.id, ruleData);
+      updateMatchingRule(editingRule._id, ruleData);
       toast.success("Rule updated successfully");
     } else {
       addMatchingRule(ruleData);
@@ -84,11 +84,7 @@ function MatchingRules() {
   };
 
   const handleDelete = (id) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this rule?"
-      )
-    ) {
+    if (window.confirm("Are you sure you want to delete this rule?")) {
       deleteMatchingRule(id);
       toast.success("Rule deleted");
     }
@@ -106,7 +102,7 @@ function MatchingRules() {
         <div className="mb-6 flex justify-end">
           <button
             onClick={openCreate}
-            className="inline-flex items-center gap-2 rounded-lg [background:var(--gradient-primary)] px-4 py-2.5 font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            className="cursor-pointer inline-flex items-center gap-2 rounded-lg [background:var(--gradient-primary)] px-4 py-2.5 font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
             <BiPlus className="h-5 w-5" />
             Add Rule
@@ -115,9 +111,9 @@ function MatchingRules() {
 
         {/* Rules List */}
         <div className="space-y-4">
-          {matchingRules.map((rule, index) => (
+          {matchingRules?.map((rule, index) => (
             <Card
-              key={rule.id}
+              key={rule._id}
               hover
               className="animate-slide-up"
               style={{
@@ -157,13 +153,13 @@ function MatchingRules() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => openEdit(rule)}
-                    className="rounded-lg p-2 text-primary transition-colors hover:bg-primary/10"
+                    className="cursor-pointer rounded-lg p-2 text-primary transition-colors hover:bg-primary/10"
                   >
                     <LuPencil className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => handleDelete(rule.id)}
-                    className="rounded-lg p-2 text-destructive transition-colors hover:bg-destructive/10"
+                    onClick={() => handleDelete(rule._id)}
+                    className="cursor-pointer rounded-lg p-2 text-destructive transition-colors hover:bg-destructive/10"
                   >
                     <GoTrash className="h-4 w-4" />
                   </button>
@@ -173,11 +169,19 @@ function MatchingRules() {
           ))}
         </div>
 
-        {matchingRules.length === 0 && (
-          <Card className="py-12 text-center">
-            <p className="text-muted-foreground">
+        {matchingRules?.length == 0 && (
+          <Card className="p-12 text-center flex flex-col items-center justify-center">
+            <p className="text-muted-foreground mb-3">
               No matching rules found. Create your first rule.
             </p>
+            <LuLink2 className="text-muted-foreground text-4xl my-3" />
+            <button
+              onClick={openCreate}
+              className="cursor-pointer inline-flex items-center gap-2 rounded-lg [background:var(--gradient-primary)] px-4 py-2.5 font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              <BiPlus className="h-5 w-5" />
+              Add Rule
+            </button>
           </Card>
         )}
       </div>
@@ -191,25 +195,21 @@ function MatchingRules() {
           <>
             <button
               onClick={() => setIsModalOpen(false)}
-              className="h-10 rounded-lg border border-input px-4 font-medium hover:bg-muted"
+              className="cursor-pointer h-10 rounded-lg border border-input px-4 font-medium hover:bg-muted"
             >
               Cancel
             </button>
             <button
               type="submit"
               form="rule-form"
-              className="h-10 rounded-lg [background:var(--gradient-primary)] px-4 font-medium text-primary-foreground hover:opacity-90"
+              className="cursor-pointer h-10 rounded-lg [background:var(--gradient-primary)] px-4 font-medium text-primary-foreground hover:opacity-90"
             >
               {editingRule ? "Update" : "Create"}
             </button>
           </>
         }
       >
-        <form
-          id="rule-form"
-          onSubmit={handleSubmit}
-          className="space-y-4"
-        >
+        <form id="rule-form" onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="mb-2 block text-sm font-medium text-foreground">
               Symptom Keywords
@@ -247,7 +247,7 @@ function MatchingRules() {
               required
             >
               {departments.map((dept) => (
-                <option key={dept.id} value={dept.id}>
+                <option key={dept._id} value={dept._id}>
                   {dept.name}
                 </option>
               ))}
@@ -267,8 +267,7 @@ function MatchingRules() {
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    priority:
-                      parseInt(e.target.value, 10) || 1,
+                    priority: parseInt(e.target.value, 10) || 1,
                   }))
                 }
                 className="h-10 w-full rounded-lg border border-input bg-background px-3 focus:outline-none focus:ring-2 focus:ring-ring"
@@ -291,22 +290,20 @@ function MatchingRules() {
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    confidenceWeight:
-                      parseFloat(e.target.value) || 0.5,
+                    confidenceWeight: parseFloat(e.target.value) || 0.5,
                   }))
                 }
                 className="h-10 w-full rounded-lg border border-input bg-background px-3 focus:outline-none focus:ring-2 focus:ring-ring"
               />
-              <p className="mt-1 text-xs text-muted-foreground">
-                0.0 – 1.0
-              </p>
+              <p className="mt-1 text-xs text-muted-foreground">0.0 – 1.0</p>
             </div>
           </div>
         </form>
       </CustomModal>
+
+      <ToastContainer position="top-center" autoClose={3000} theme="colored" />
     </div>
   );
 }
 
-
-export default MatchingRules
+export default MatchingRules;
