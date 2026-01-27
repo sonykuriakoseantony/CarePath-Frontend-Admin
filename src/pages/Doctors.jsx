@@ -103,7 +103,10 @@ function Doctors() {
 
       <div className="p-6">
         {/* Header Actions */}
-        <div className="mb-6 flex justify-end">
+        <div className="mb-6 flex justify-between">
+          <p className="py-2  text-xl text-primary">
+            Doctors: {doctors.length}
+          </p>
           <button
             onClick={openCreate}
             className="cursor-pointer inline-flex items-center gap-2 rounded-lg [background:var(--gradient-primary)] px-4 py-2.5 font-medium text-primary-foreground transition-opacity hover:opacity-90"

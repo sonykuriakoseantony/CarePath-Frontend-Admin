@@ -1,6 +1,6 @@
 
 
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 import { useData } from "../context/DataContext";
 import { Card, CardHeader, StatCard } from "../components/common/Card";
@@ -17,15 +17,15 @@ function Dashboard() {
   
 
   const submittedCount = symptoms.filter(
-    (s) => s.status == "SUBMITTED"
+    (s) => s.status == "submitted"
   ).length;
 
   const suggestedCount = symptoms.filter(
-    (s) => s.status == "AUTO_SUGGESTED"
+    (s) => s.status == "auto_suggested"
   ).length;
 
   const approvedCount = symptoms.filter(
-    (s) => s.status == "APPROVED"
+    (s) => s.status == "approved"
   ).length;
 
   const activeDoctors = doctors.filter(
@@ -33,7 +33,7 @@ function Dashboard() {
   ).length;
 
   const recentSymptoms = symptoms
-    .filter((s) => s.status != "REJECTED")
+    .filter((s) => s.status != "rejected")
     .sort(
       (a, b) =>
         new Date(b.submittedAt).getTime() -
@@ -61,18 +61,18 @@ function Dashboard() {
           <StatCard
             title="Pending Review"
             value={submittedCount}
-            icon={<FiClock className="h-6 w-6" />}
+            icon={<FiClock className="h-6 w-6 text-red-400" />}
             trend={{ value: 12, isPositive: false }}
           />
           <StatCard
             title="Awaiting Approval"
             value={suggestedCount}
-            icon={<IoWarningOutline className="h-6 w-6" />}
+            icon={<IoWarningOutline className="h-6 w-6 text-yellow-500" />}
           />
           <StatCard
             title="Approved Cases"
             value={approvedCount}
-            icon={<FiCheckCircle className="h-6 w-6" />}
+            icon={<FiCheckCircle className="h-6 w-6 text-green-500" />}
             trend={{ value: 8, isPositive: true }}
           />
           <StatCard
@@ -92,7 +92,7 @@ function Dashboard() {
               action={
                 <button
                   onClick={() => navigate("/symptoms")}
-                  className="text-sm font-medium text-primary hover:underline"
+                  className="cursor-pointer text-sm font-medium text-primary hover:underline"
                 >
                   View All
                 </button>
@@ -102,7 +102,7 @@ function Dashboard() {
             <div className="space-y-3">
               {recentSymptoms.map((symptom, index) => (
                 <div
-                  key={symptom.id}
+                  key={symptom._id}
                   className="flex items-center justify-between rounded-lg bg-muted/50 p-4 animate-slide-up"
                   style={{
                     animationDelay: `${index * 50}ms`,
@@ -133,7 +133,7 @@ function Dashboard() {
 
                   <button
                     onClick={() => navigate("/symptoms")}
-                    className="ml-4 rounded-lg px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+                    className="cursor-pointer ml-4 rounded-lg px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
                   >
                     Review
                   </button>
@@ -152,10 +152,14 @@ function Dashboard() {
           <div className="space-y-4">
             {/* Departments */}
             <Card>
-              <CardHeader
+              <div className="flex justify-between">
+                <CardHeader
                 title="Departments"
                 subtitle={`${departments.length} total`}
               />
+                  <Link to={"/departments"} className="text-sm font-medium text-primary hover:underline">View All</Link>
+                </div>
+              
               <div className="space-y-2">
                 {departments.slice(0, 4).map((dept) => (
                   <div
@@ -180,6 +184,7 @@ function Dashboard() {
                     />
                   </div>
                 ))}
+                
               </div>
             </Card>
 

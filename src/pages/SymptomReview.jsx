@@ -36,23 +36,31 @@ function SymptomReview() {
     "N/A";
 
   const handleRunMatching = async (symptomId) => {
-    await runMatching(symptomId);
-    console.log(symptoms);
-    
-    toast.success(
+    const success = await runMatching(symptomId);
+    if(success){
+      toast.success(
       "Matching algorithm executed successfully"
     );
+    }
+    else{
+      toast.error(
+      "Error Running Matching algorithm!"
+    );
+    }
+    
   };
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (!selectedSymptom) return;
 
     approveSymptom(selectedSymptom._id, notes);
-    toast.success(
-      `Patient ${selectedSymptom.patientName} notified via email`
-    );
+    const success = await approveSymptom(selectedSymptom._id, notes);;
+    if(success){
+      toast.success(`Patient ${selectedSymptom.patientName} notified via email`);
     setSelectedSymptom(null);
     setNotes("");
+    }
+    
   };
 
   const handleReject = () => {
@@ -99,15 +107,15 @@ function SymptomReview() {
             <button
               key={status}
               onClick={() => setFilter(status)}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
                 filter == status
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
             >
               {status == "all"
-                ? "all"
-                : status.replace("_", " ")}
+                ? "ALL"
+                : status.replace("_", " ").toUpperCase()}
               {status !== "all" && (
                 <span className="ml-2 rounded-full bg-background/20 px-1.5 py-0.5 text-xs">
                   {statusCounts[status]}
@@ -123,7 +131,7 @@ function SymptomReview() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground" style={{width : '170px'}}>
                     Patient
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -262,7 +270,7 @@ function SymptomReview() {
                                 );
                                 setNotes("");
                               }}
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
+                              className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
                             >
                               <LuCheck className="h-3.5 w-3.5" />
                               Approve
@@ -274,7 +282,7 @@ function SymptomReview() {
                                 );
                                 setNotes("");
                               }}
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-1.5 text-sm font-medium text-destructive hover:bg-destructive/20"
+                              className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-1.5 text-sm font-medium text-destructive hover:bg-destructive/20"
                             >
                               <MdClose className="h-3.5 w-3.5" />
                             </button>
@@ -426,7 +434,7 @@ function SymptomReview() {
               </div>
             )}
 
-            {selectedSymptom.adminNotes && (
+            {(selectedSymptom.adminNotes && selectedSymptom.adminNotes != " ") && (
               <div>
                 <p className="mb-2 text-sm font-medium">
                   Admin Notes

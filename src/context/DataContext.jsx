@@ -19,6 +19,7 @@ import {
   removeDepartmentAPI,
   removeDoctorAPI,
   removeRuleAPI,
+  updateSymptomAPI,
 } from "../services/allAPI";
 import { getAuthHeader } from "../utils/authHeader";
 
@@ -421,7 +422,9 @@ export function DataProvider({ children }) {
   /* ---------- Matching Logic ---------- */
   const runMatching = useCallback(
     async (symptomId) => {
-      const symptom = symptoms.find((s) => s._id === symptomId);
+      console.log("Inside run matching function");
+
+      const symptom = symptoms.find((s) => s._id == symptomId);
       if (!symptom || symptom.status !== "submitted") return;
 
       const symptomText = symptom.symptoms.toLowerCase();
@@ -439,7 +442,7 @@ export function DataProvider({ children }) {
           if (
             !bestMatch ||
             confidence > bestMatch.confidence ||
-            (confidence === bestMatch.confidence &&
+            (confidence == bestMatch.confidence &&
               rule.priority < bestMatch.priority)
           ) {
             bestMatch = {
@@ -451,10 +454,13 @@ export function DataProvider({ children }) {
         }
       }
 
-      if (!bestMatch) return;
+      if (!bestMatch) {
+        console.log("No best matching returing witout updating");
+        return false;
+      }
 
       const availableDoctors = doctors.filter(
-        (d) => d.departmentId === bestMatch.departmentId && d.isAvailable,
+        (d) => d.departmentId == bestMatch.departmentId && d.isAvailable,
       );
 
       const updatePayload = {
@@ -464,39 +470,78 @@ export function DataProvider({ children }) {
         confidenceScore: Math.round(bestMatch.confidence * 100) / 100,
       };
 
-      // 1️⃣ Save to DB
-      const headers = getAuthHeader();
-      await updateSymptomAPI(symptomId, updatePayload, headers);
+      console.log(updatePayload);
 
-      // 2️⃣ Update local state (instant UI update)
-      setSymptoms((prev) =>
-        prev.map((s) => (s._id === symptomId ? { ...s, ...updatePayload } : s)),
-      );
+      try {
+        // Save to DB
+        const headers = getAuthHeader();
+        const res = await updateSymptomAPI(symptomId, updatePayload, headers);
+        console.log(res);
+
+        if (res.status == 200) {
+          console.log("Returning update success");
+          // Call fetch to Update local state (instant UI update)
+          fetchSymptomsRequests();
+          return true;
+        }
+        // 2️⃣ Update local state (instant UI update)
+      } catch (err) {
+        console.log(err);
+      }
     },
     [symptoms, matchingRules, doctors],
   );
 
-  const approveSymptom = useCallback((id, notes) => {
-    setSymptoms((prev) =>
-      prev.map((s) =>
-        s.id === id
-          ? {
-              ...s,
-              status: "approved",
-              adminNotes: notes,
-              approvedAt: new Date(),
-            }
-          : s,
-      ),
-    );
+  const approveSymptom = useCallback(async (id, notes) => {
+    const updatePayload = {
+      status: "approved",
+      approvedAt: new Date(Date.now() - 172800000),
+      adminNotes: notes,
+    };
+
+    try {
+      // Save to DB
+      const headers = getAuthHeader();
+      const res = await updateSymptomAPI(id, updatePayload, headers);
+      console.log(res);
+
+      if (res.status == 200) {
+        console.log("Returning update success");
+        // Call fetch to Update local state (instant UI update)
+        fetchSymptomsRequests();
+        return true;
+      }
+      // 2️⃣ Update local state (instant UI update)
+    } catch (err) {
+      console.log(err);
+    }
+
   }, []);
 
-  const rejectSymptom = useCallback((id, notes) => {
-    setSymptoms((prev) =>
-      prev.map((s) =>
-        s.id == id ? { ...s, status: "rejected", adminNotes: notes } : s,
-      ),
-    );
+  
+
+  const rejectSymptom = useCallback(async (id, notes) => {
+    const updatePayload = {
+      status: "rejected",
+      adminNotes: notes,
+    };
+
+    try {
+      // Save to DB
+      const headers = getAuthHeader();
+      const res = await updateSymptomAPI(id, updatePayload, headers);
+      console.log(res);
+
+      if (res.status == 200) {
+        console.log("Rejected the case");
+        // Call fetch to Update local state (instant UI update)
+        fetchSymptomsRequests();
+        return true;
+      }
+      // 2️⃣ Update local state (instant UI update)
+    } catch (err) {
+      console.log(err);
+    }
   }, []);
 
   return (
