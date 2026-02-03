@@ -23,44 +23,34 @@ function SymptomReview() {
   const [notes, setNotes] = useState("");
 
   const filteredSymptoms =
-    filter == "all"
-      ? symptoms
-      : symptoms.filter((s) => s.status == filter);
+    filter == "all" ? symptoms : symptoms.filter((s) => s.status == filter);
 
   const getDepartmentName = (id) =>
-    departments.find((d) => d._id == id)?.name ||
-    "N/A";
+    departments.find((d) => d._id == id)?.name || "N/A";
 
-  const getDoctorName = (id) =>
-    doctors.find((d) => d._id == id)?.name ||
-    "N/A";
+  const getDoctorName = (id) => doctors.find((d) => d._id == id)?.name || "N/A";
 
   const handleRunMatching = async (symptomId) => {
     const success = await runMatching(symptomId);
-    if(success){
-      toast.success(
-      "Matching algorithm executed successfully"
-    );
+    if (success) {
+      toast.success("Matching algorithm executed successfully");
+    } else {
+      toast.error("Error Running Matching algorithm!");
     }
-    else{
-      toast.error(
-      "Error Running Matching algorithm!"
-    );
-    }
-    
   };
 
   const handleApprove = async () => {
     if (!selectedSymptom) return;
 
     approveSymptom(selectedSymptom._id, notes);
-    const success = await approveSymptom(selectedSymptom._id, notes);;
-    if(success){
-      toast.success(`Patient ${selectedSymptom.patientName} notified via email`);
-    setSelectedSymptom(null);
-    setNotes("");
+    const success = await approveSymptom(selectedSymptom._id, notes);
+    if (success) {
+      toast.success(
+        `Patient ${selectedSymptom.patientName} notified via email`,
+      );
+      setSelectedSymptom(null);
+      setNotes("");
     }
-    
   };
 
   const handleReject = () => {
@@ -73,18 +63,10 @@ function SymptomReview() {
   };
 
   const statusCounts = {
-    submitted: symptoms.filter(
-      (s) => s.status == "submitted"
-    ).length,
-    auto_suggested: symptoms.filter(
-      (s) => s.status == "auto_suggested"
-    ).length,
-    approved: symptoms.filter(
-      (s) => s.status == "approved"
-    ).length,
-    rejected: symptoms.filter(
-      (s) => s.status == "rejected"
-    ).length,
+    submitted: symptoms.filter((s) => s.status == "submitted").length,
+    auto_suggested: symptoms.filter((s) => s.status == "auto_suggested").length,
+    approved: symptoms.filter((s) => s.status == "approved").length,
+    rejected: symptoms.filter((s) => s.status == "rejected").length,
   };
 
   return (
@@ -97,32 +79,28 @@ function SymptomReview() {
       <div className="space-y-6 p-6">
         {/* Filter Tabs */}
         <div className="flex flex-wrap gap-2">
-          {[
-            "all",
-            "submitted",
-            "auto_suggested",
-            "approved",
-            "rejected",
-          ].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
-                filter == status
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              {status == "all"
-                ? "ALL"
-                : status.replace("_", " ").toUpperCase()}
-              {status !== "all" && (
-                <span className="ml-2 rounded-full bg-background/20 px-1.5 py-0.5 text-xs">
-                  {statusCounts[status]}
-                </span>
-              )}
-            </button>
-          ))}
+          {["all", "submitted", "auto_suggested", "approved", "rejected"].map(
+            (status) => (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                  filter == status
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                {status == "all"
+                  ? "ALL"
+                  : status.replace("_", " ").toUpperCase()}
+                {status !== "all" && (
+                  <span className="ml-2 rounded-full bg-background/20 px-1.5 py-0.5 text-xs">
+                    {statusCounts[status]}
+                  </span>
+                )}
+              </button>
+            ),
+          )}
         </div>
 
         {/* Symptoms Table */}
@@ -131,18 +109,16 @@ function SymptomReview() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground" style={{width : '170px'}}>
+                  <th></th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                    style={{ width: "170px" }}
+                  >
                     Patient
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Symptoms
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Severity
-                  </th>
-                  {/* <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Status
-                  </th> */}
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Suggested
                   </th>
@@ -161,6 +137,14 @@ function SymptomReview() {
                     key={symptom._id}
                     className="transition-colors hover:bg-muted/20"
                   >
+                    <td className="px-3 py-4">
+                      <button
+                        onClick={() => setSelectedSymptom(symptom)}
+                        className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg p-4 text-muted-foreground hover:bg-muted"
+                      >
+                        <LuEye className="h-5 w-5" />
+                      </button>
+                    </td>
                     <td className="px-6 py-4">
                       <p className="font-medium text-foreground">
                         {symptom.patientName}
@@ -169,6 +153,17 @@ function SymptomReview() {
                     </td>
 
                     <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                          symptom.severity == "severe"
+                            ? "bg-red-100 text-red-700"
+                            : symptom.severity == "moderate"
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-emerald-100 text-emerald-700"
+                        }`}
+                      >
+                        {symptom.severity}
+                      </span>
                       <p className="line-clamp-2 max-w-xs text-sm text-foreground">
                         {symptom.symptoms}
                       </p>
@@ -176,81 +171,44 @@ function SymptomReview() {
                         Duration: {symptom.duration}
                       </p>
                     </td>
-
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                          symptom.severity == "severe"
-                            ? "bg-red-100 text-red-700"
-                            : symptom.severity ==
-                              "moderate"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-emerald-100 text-emerald-700"
-                        }`}
-                      >
-                        {symptom.severity}
-                      </span>
-                    </td>
-
-                    {/* <td className="px-6 py-4">
-                      <StatusBadge status={symptom.status} />
-                    </td> */}
-
                     <td className="px-6 py-4">
                       {symptom.suggestedDepartmentId ? (
                         <>
                           <p className="text-sm font-medium">
-                            {getDepartmentName(
-                              symptom.suggestedDepartmentId
-                            )}
+                            {getDepartmentName(symptom.suggestedDepartmentId)}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {getDoctorName(
-                              symptom.suggestedDoctorId
-                            )}
+                            {getDoctorName(symptom.suggestedDoctorId)}
                           </p>
                         </>
                       ) : (
-                        <span className="text-sm text-muted-foreground">
-                          —
-                        </span>
+                        <span className="text-sm text-muted-foreground">—</span>
                       )}
                     </td>
 
                     <td className="px-6 py-4">
-                      {symptom.confidenceScore !==
-                      undefined ? (
+                      {symptom.confidenceScore !== undefined ? (
                         <div className="flex items-center gap-2">
                           <div className="h-2 w-16 overflow-hidden rounded-full bg-muted">
                             <div
                               className="h-full rounded-full bg-primary"
                               style={{
-                                width: `${
-                                  symptom.confidenceScore *
-                                  100
-                                }%`,
+                                width: `${symptom.confidenceScore * 100}%`,
                               }}
                             />
                           </div>
                           <span className="text-sm text-muted-foreground">
-                            {Math.round(
-                              symptom.confidenceScore *
-                                100
-                            )}
-                            %
+                            {Math.round(symptom.confidenceScore * 100)}%
                           </span>
                         </div>
                       ) : (
-                        <span className="text-sm text-muted-foreground">
-                          —
-                        </span>
+                        <span className="text-sm text-muted-foreground">—</span>
                       )}
                     </td>
 
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        {symptom.status ==
-                          "submitted" && (
+                        {symptom.status == "submitted" && (
                           <button
                             onClick={() => handleRunMatching(symptom._id)}
                             className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:opacity-90"
@@ -260,14 +218,11 @@ function SymptomReview() {
                           </button>
                         )}
 
-                        {symptom.status ===
-                          "auto_suggested" && (
+                        {symptom.status === "auto_suggested" && (
                           <>
                             <button
                               onClick={() => {
-                                setSelectedSymptom(
-                                  symptom
-                                );
+                                setSelectedSymptom(symptom);
                                 setNotes("");
                               }}
                               className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
@@ -277,9 +232,7 @@ function SymptomReview() {
                             </button>
                             <button
                               onClick={() => {
-                                setSelectedSymptom(
-                                  symptom
-                                );
+                                setSelectedSymptom(symptom);
                                 setNotes("");
                               }}
                               className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-1.5 text-sm font-medium text-destructive hover:bg-destructive/20"
@@ -289,22 +242,12 @@ function SymptomReview() {
                           </>
                         )}
 
-                        {(symptom.status ===
+                        {/* {(symptom.status ===
                           "approved" ||
                           symptom.status ===
                             "rejected") && (
-                          <button
-                            onClick={() =>
-                              setSelectedSymptom(
-                                symptom
-                              )
-                            }
-                            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted"
-                          >
-                            <LuEye className="h-3.5 w-3.5" />
-                            View
-                          </button>
-                        )}
+                          
+                        )} */}
                       </div>
                     </td>
                   </tr>
@@ -315,9 +258,7 @@ function SymptomReview() {
 
           {filteredSymptoms.length == 0 && (
             <div className="p-12 text-center">
-              <p className="text-muted-foreground">
-                No submissions found
-              </p>
+              <p className="text-muted-foreground">No submissions found</p>
             </div>
           )}
         </Card>
@@ -328,14 +269,12 @@ function SymptomReview() {
         open={!!selectedSymptom}
         onClose={() => setSelectedSymptom(null)}
         title={
-          selectedSymptom?.status ===
-          "auto_suggested"
+          selectedSymptom?.status == "auto_suggested"
             ? "Approve Submission"
             : "Submission Details"
         }
         footer={
-          selectedSymptom?.status ===
-          "auto_suggested" && (
+          selectedSymptom?.status == "auto_suggested" && (
             <>
               <button
                 onClick={handleApprove}
@@ -357,29 +296,21 @@ function SymptomReview() {
           <div className="space-y-4">
             <div className="space-y-3 rounded-lg bg-muted/50 p-4">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Patient
-                </span>
+                <span className="text-sm text-muted-foreground">Patient</span>
                 <span className="text-sm font-medium">
                   {selectedSymptom.patientName}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Email
-                </span>
-                <span className="text-sm">
-                  {selectedSymptom.patientEmail}
-                </span>
+                <span className="text-sm text-muted-foreground">Email</span>
+                <span className="text-sm">{selectedSymptom.patientEmail}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">
                   Suggested Department
                 </span>
                 <span className="text-sm font-medium">
-                  {getDepartmentName(
-                    selectedSymptom.suggestedDepartmentId
-                  )}
+                  {getDepartmentName(selectedSymptom.suggestedDepartmentId)}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -387,9 +318,7 @@ function SymptomReview() {
                   Suggested Doctor
                 </span>
                 <span className="text-sm">
-                  {getDoctorName(
-                    selectedSymptom.suggestedDoctorId
-                  )}
+                  {getDoctorName(selectedSymptom.suggestedDoctorId)}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -398,26 +327,20 @@ function SymptomReview() {
                 </span>
                 <span className="text-sm">
                   {selectedSymptom.confidenceScore
-                    ? `${Math.round(
-                        selectedSymptom.confidenceScore *
-                          100
-                      )}%`
+                    ? `${Math.round(selectedSymptom.confidenceScore * 100)}%`
                     : "N/A"}
                 </span>
               </div>
             </div>
 
             <div>
-              <p className="mb-2 text-sm font-medium">
-                Symptoms
-              </p>
+              <p className="mb-2 text-sm font-medium">Symptoms</p>
               <p className="rounded-lg bg-muted/30 p-3 text-sm text-muted-foreground">
                 {selectedSymptom.symptoms}
               </p>
             </div>
 
-            {selectedSymptom.status ===
-              "auto_suggested" && (
+            {selectedSymptom.status == "auto_suggested" && (
               <div>
                 <label className="mb-2 flex items-center gap-2 text-sm font-medium">
                   <LuMessageSquare className="h-4 w-4" />
@@ -425,25 +348,22 @@ function SymptomReview() {
                 </label>
                 <textarea
                   value={notes}
-                  onChange={(e) =>
-                    setNotes(e.target.value)
-                  }
+                  onChange={(e) => setNotes(e.target.value)}
                   className="h-24 w-full resize-none rounded-lg border border-input p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   placeholder="Add notes for the patient (optional)..."
                 />
               </div>
             )}
 
-            {(selectedSymptom.adminNotes && selectedSymptom.adminNotes != " ") && (
-              <div>
-                <p className="mb-2 text-sm font-medium">
-                  Admin Notes
-                </p>
-                <p className="rounded-lg bg-muted/30 p-3 text-sm text-muted-foreground">
-                  {selectedSymptom.adminNotes}
-                </p>
-              </div>
-            )}
+            {selectedSymptom.adminNotes &&
+              selectedSymptom.adminNotes != " " && (
+                <div>
+                  <p className="mb-2 text-sm font-medium">Admin Notes</p>
+                  <p className="rounded-lg bg-muted/30 p-3 text-sm text-muted-foreground">
+                    {selectedSymptom.adminNotes}
+                  </p>
+                </div>
+              )}
           </div>
         )}
       </CustomModal>
@@ -453,5 +373,4 @@ function SymptomReview() {
   );
 }
 
-
-export default SymptomReview
+export default SymptomReview;

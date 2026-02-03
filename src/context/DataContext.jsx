@@ -22,6 +22,7 @@ import {
   updateSymptomAPI,
 } from "../services/allAPI";
 import { getAuthHeader } from "../utils/authHeader";
+import { useAuth } from "./AuthContext";
 
 const DataContext = createContext(undefined);
 
@@ -208,14 +209,16 @@ export function DataProvider({ children }) {
 
   console.log(symptoms);
 
-  const generateId = () => Math.random().toString(36).substring(2, 9);
+  const { user, authorisedUSer } = useAuth();
 
   useEffect(() => {
-    fetchDepartments();
-    fetchAllDoctors();
-    fetchAllRules();
-    fetchSymptomsRequests();
-  }, []);
+    if (authorisedUSer) {
+      fetchDepartments();
+      fetchAllDoctors();
+      fetchAllRules();
+      fetchSymptomsRequests();
+    }
+  }, [authorisedUSer]);
 
   /* ---------- Department CRUD ---------- */
   const fetchDepartments = async () => {
@@ -515,10 +518,7 @@ export function DataProvider({ children }) {
     } catch (err) {
       console.log(err);
     }
-
   }, []);
-
-  
 
   const rejectSymptom = useCallback(async (id, notes) => {
     const updatePayload = {
