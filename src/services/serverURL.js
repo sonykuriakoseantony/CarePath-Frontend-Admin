@@ -1,5 +1,5 @@
-const serverURL = "http://localhost:5000";
-// const serverURL = "https://bookstore-mern-stack-server.onrender.com";
+// const serverURL = "http://localhost:5000";
+const serverURL = "https://carepath-backend.onrender.com";
 
 
 export default serverURL;
