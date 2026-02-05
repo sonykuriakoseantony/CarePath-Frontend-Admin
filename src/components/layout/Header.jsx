@@ -3,8 +3,8 @@ import { useData } from "../../context/DataContext";
 
 function Header({ title, subtitle }) {
   const { symptoms } = useData();
-  const pendingCount = symptoms.filter(
-    (s) => s.status == "SUBMITTED"
+  const pendingCount = symptoms?.filter(
+    (s) => s.status == "submitted"
   ).length;
 
   return (

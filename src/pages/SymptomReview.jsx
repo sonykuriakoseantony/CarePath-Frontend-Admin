@@ -7,6 +7,7 @@ import StatusBadge from "../components/common/StatusBadge";
 import CustomModal from "../components/common/CustomModal";
 import { LuCheck, LuEye, LuMessageSquare, LuPlay } from "react-icons/lu";
 import { MdClose } from "react-icons/md";
+import serverURL from "../services/serverURL";
 
 function SymptomReview() {
   const {
@@ -42,7 +43,7 @@ function SymptomReview() {
   const handleApprove = async () => {
     if (!selectedSymptom) return;
 
-    approveSymptom(selectedSymptom._id, notes);
+    // approveSymptom(selectedSymptom._id, notes);
     const success = await approveSymptom(selectedSymptom._id, notes);
     if (success) {
       toast.success(
@@ -63,10 +64,10 @@ function SymptomReview() {
   };
 
   const statusCounts = {
-    submitted: symptoms.filter((s) => s.status == "submitted").length,
-    auto_suggested: symptoms.filter((s) => s.status == "auto_suggested").length,
-    approved: symptoms.filter((s) => s.status == "approved").length,
-    rejected: symptoms.filter((s) => s.status == "rejected").length,
+    submitted: symptoms?.filter((s) => s.status == "submitted").length,
+    suggested: symptoms?.filter((s) => s.status == "suggested").length,
+    approved: symptoms?.filter((s) => s.status == "approved").length,
+    rejected: symptoms?.filter((s) => s.status == "rejected").length,
   };
 
   return (
@@ -79,12 +80,12 @@ function SymptomReview() {
       <div className="space-y-6 p-6">
         {/* Filter Tabs */}
         <div className="flex flex-wrap gap-2">
-          {["all", "submitted", "auto_suggested", "approved", "rejected"].map(
+          {["all", "submitted", "suggested", "approved", "rejected"].map(
             (status) => (
               <button
                 key={status}
                 onClick={() => setFilter(status)}
-                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                className={`rounded-lg px-4 py-2 text-sm text-center font-medium transition-colors cursor-pointer ${
                   filter == status
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -218,7 +219,7 @@ function SymptomReview() {
                           </button>
                         )}
 
-                        {symptom.status === "auto_suggested" && (
+                        {symptom.status == "suggested" && (
                           <>
                             <button
                               onClick={() => {
@@ -256,7 +257,7 @@ function SymptomReview() {
             </table>
           </div>
 
-          {filteredSymptoms.length == 0 && (
+          {filteredSymptoms?.length == 0 && (
             <div className="p-12 text-center">
               <p className="text-muted-foreground">No submissions found</p>
             </div>
@@ -269,12 +270,12 @@ function SymptomReview() {
         open={!!selectedSymptom}
         onClose={() => setSelectedSymptom(null)}
         title={
-          selectedSymptom?.status == "auto_suggested"
+          selectedSymptom?.status == "suggested"
             ? "Approve Submission"
             : "Submission Details"
         }
         footer={
-          selectedSymptom?.status == "auto_suggested" && (
+          selectedSymptom?.status == "suggested" && (
             <>
               <button
                 onClick={handleApprove}
@@ -340,7 +341,29 @@ function SymptomReview() {
               </p>
             </div>
 
-            {selectedSymptom.status == "auto_suggested" && (
+            {selectedSymptom.medicalReports.length > 0 && (
+              <div>
+                <p className="mb-2 text-sm font-medium">Reports</p>
+                <div className="rounded-lg bg-muted/30 p-3 text-sm text-muted-foreground">
+                  <div className="flex gap-1.5 flex-wrap">
+                    {selectedSymptom?.medicalReports?.map((report, index) => (
+                    <div key={index}>
+                      <a
+                        className="px-3 py-2 bg-slate-100 border border-slate-300 rounded-md inline-block transition-all duration-300 hover:bg-slate-200"
+                        href={`${serverURL}/uploads/${report}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {`Report ${index + 1}`}
+                      </a>
+                    </div>
+                  ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedSymptom.status == "suggested" && (
               <div>
                 <label className="mb-2 flex items-center gap-2 text-sm font-medium">
                   <LuMessageSquare className="h-4 w-4" />

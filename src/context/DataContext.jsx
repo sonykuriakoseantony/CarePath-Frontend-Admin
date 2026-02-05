@@ -61,49 +61,6 @@ const initialDepartments = [
   },
 ];
 
-const initialDoctors = [
-  {
-    _id: "1",
-    name: "Emily Chen",
-    email: "emily@medcare.com",
-    departmentId: "1",
-    specialization: "Internal Medicine",
-    isAvailable: true,
-  },
-  {
-    _id: "2",
-    name: "Michael Ross",
-    email: "michael@medcare.com",
-    departmentId: "2",
-    specialization: "Interventional Cardiology",
-    isAvailable: true,
-  },
-  {
-    _id: "3",
-    name: "Lisa Park",
-    email: "lisa@medcare.com",
-    departmentId: "3",
-    specialization: "Sports Medicine",
-    isAvailable: true,
-  },
-  {
-    _id: "4",
-    name: "James Wright",
-    email: "james@medcare.com",
-    departmentId: "4",
-    specialization: "Clinical Neurology",
-    isAvailable: false,
-  },
-  {
-    _id: "5",
-    name: "Anna Miller",
-    email: "anna@medcare.com",
-    departmentId: "5",
-    specialization: "Clinical Dermatology",
-    isAvailable: true,
-  },
-];
-
 const initialRules = [
   {
     id: "1",
@@ -175,7 +132,7 @@ const initialSymptoms = [
     symptoms: "Lower back pain after lifting heavy objects",
     severity: "moderate",
     duration: "3 days",
-    status: "AUTO_SUGGESTED",
+    status: "suggested",
     submittedAt: new Date(Date.now() - 259200000),
     suggestedDepartmentId: "3",
     suggestedDoctorId: "3",
@@ -207,7 +164,7 @@ export function DataProvider({ children }) {
   const [symptoms, setSymptoms] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
 
-  console.log(symptoms);
+  // console.log(symptoms);
 
   const { user, authorisedUSer } = useAuth();
 
@@ -322,9 +279,6 @@ export function DataProvider({ children }) {
     } catch (err) {
       console.log(err);
     }
-    // setDoctors((prev) =>
-    //   prev.map((d) => (d.id === id ? { ...d, ...doctor } : d)),
-    // );
   }, []);
 
   const deleteDoctor = useCallback(async (id) => {
@@ -339,7 +293,6 @@ export function DataProvider({ children }) {
     } catch (err) {
       console.log(err);
     }
-    // setDoctors((prev) => prev.filter((d) => d.id !== id));
   }, []);
 
   /* ---------- Matching Rule CRUD ---------- */
@@ -371,7 +324,6 @@ export function DataProvider({ children }) {
     } catch (err) {
       console.log(err);
     }
-    // setMatchingRules((prev) => [...prev, { ...rule, id: generateId() }]);
   }, []);
 
   const updateMatchingRule = useCallback(async (id, rule) => {
@@ -386,9 +338,6 @@ export function DataProvider({ children }) {
     } catch (err) {
       console.log(err);
     }
-    // setMatchingRules((prev) =>
-    //   prev.map((r) => (r.id === id ? { ...r, ...rule } : r)),
-    // );
   }, []);
 
   const deleteMatchingRule = useCallback(async (id) => {
@@ -403,7 +352,6 @@ export function DataProvider({ children }) {
     } catch (err) {
       console.log(err);
     }
-    // setMatchingRules((prev) => prev.filter((r) => r.id !== id));
   }, []);
 
   /* ---------- Symptoms request fetch ---------- */
@@ -467,19 +415,18 @@ export function DataProvider({ children }) {
       );
 
       const updatePayload = {
-        status: "auto_suggested",
+        status: "suggested",
         suggestedDepartmentId: bestMatch.departmentId,
         suggestedDoctorId: availableDoctors[0]?._id || "",
         confidenceScore: Math.round(bestMatch.confidence * 100) / 100,
       };
 
-      console.log(updatePayload);
+      // console.log(updatePayload);
 
       try {
         // Save to DB
         const headers = getAuthHeader();
         const res = await updateSymptomAPI(symptomId, updatePayload, headers);
-        console.log(res);
 
         if (res.status == 200) {
           console.log("Returning update success");
@@ -506,7 +453,6 @@ export function DataProvider({ children }) {
       // Save to DB
       const headers = getAuthHeader();
       const res = await updateSymptomAPI(id, updatePayload, headers);
-      console.log(res);
 
       if (res.status == 200) {
         console.log("Returning update success");
@@ -530,7 +476,6 @@ export function DataProvider({ children }) {
       // Save to DB
       const headers = getAuthHeader();
       const res = await updateSymptomAPI(id, updatePayload, headers);
-      console.log(res);
 
       if (res.status == 200) {
         console.log("Rejected the case");

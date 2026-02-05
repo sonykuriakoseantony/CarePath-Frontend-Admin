@@ -13,6 +13,8 @@ function Dashboard() {
   const { symptoms, departments, doctors } = useData();
   const navigate = useNavigate();
 
+  console.log(symptoms);
+
   // console.log(symptoms, departments, doctors);
   
 
@@ -21,7 +23,7 @@ function Dashboard() {
   ).length;
 
   const suggestedCount = symptoms.filter(
-    (s) => s.status == "auto_suggested"
+    (s) => s.status == "suggested"
   ).length;
 
   const approvedCount = symptoms.filter(
@@ -33,11 +35,11 @@ function Dashboard() {
   ).length;
 
   const recentSymptoms = symptoms
-    .filter((s) => s.status != "rejected")
+    .filter((s) => s.status == "submitted")
     .sort(
       (a, b) =>
-        new Date(b.submittedAt).getTime() -
-        new Date(a.submittedAt).getTime()
+        new Date(b.createdAt).getTime() -
+        new Date(a.createdAt).getTime()
     )
     .slice(0, 5);
 
