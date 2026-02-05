@@ -10,7 +10,7 @@ const ROUTE_PERMISSIONS = {
   "/doctors": "manage_doctors",
   "/rules": "manage_rules",
   "/user-settings": "manage_users",
-  "/settings": "configure_settings",
+  // "/settings": "configure_settings",
   "/symptoms": "view_symptoms",
   "/user/:id" : "view_user"
 };

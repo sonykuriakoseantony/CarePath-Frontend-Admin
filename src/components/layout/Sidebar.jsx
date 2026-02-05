@@ -11,7 +11,7 @@ const navigation = [
   { name: 'Doctors', href: '/doctors', icon: FaUserDoctor, permission: 'manage_doctors' },
   { name: 'Matching Rules', href: '/rules', icon: LuLink2, permission: 'manage_rules' },
   { name: 'User Settings', href: '/user-settings', icon: FaUsersCog, permission: 'manage_users' },
-  { name: 'Settings', href: '/settings', icon: LuSettings, permission: 'configure_settings' },
+  // { name: 'Settings', href: '/settings', icon: LuSettings, permission: 'configure_settings' },
 ];
 
 function Sidebar() {

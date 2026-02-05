@@ -26,7 +26,7 @@ function App(){
         <Route path="/user-settings" element={<UserManagement />} />
         <Route path="/user/:id" element={<ViewUser />} />
         <Route path="/rules" element={<MatchingRules />} />
-        <Route path="/settings" element={<Settings />} />
+        {/* <Route path="/settings" element={<Settings />} /> */}
       </Route>
       <Route path="/*" element={<PageNotFound />} />
     </Routes>

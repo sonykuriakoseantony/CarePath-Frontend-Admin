@@ -170,13 +170,13 @@ function Login() {
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-border">
-            <p className="text-xs text-muted-foreground text-center">
+          <div className="m-0 p-0 border-t border-border opacity-0 absolute">
+            <p className="text-xs text-white text-center">
               Demo credentials:{" "}
               <span className="font-medium">admin@carepath.com</span> /{" "}
               <span className="font-medium">admin@123</span>
             </p>
-            <p className="text-xs text-muted-foreground text-center">
+            <p className="text-xs text-white text-center">
               Demo credentials:{" "}
               <span className="font-medium">john@carepath.com</span> /{" "}
               <span className="font-medium">john@123</span>
